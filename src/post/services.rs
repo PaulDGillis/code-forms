@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use actix_web::{ get, post, web::{Json, self}, Responder, HttpResponse, delete };
 
 use crate::{AppState, post::models::{TextPost, CreateTextPostBody}};
@@ -32,7 +34,19 @@ pub async fn create(state: web::Data<AppState>, body: Json<CreateTextPostBody>) 
         .await
     {
         Ok(text_post) => HttpResponse::Ok().json(text_post),
-        Err(_) => HttpResponse::InternalServerError().json("Unable to create post.")
+        Err(error) => {
+            match error.as_database_error() {
+                None => HttpResponse::InternalServerError().json("Unable to create post."),
+                Some(db_error) => {
+                    let error_message = db_error.deref().constraint().unwrap_or("");
+                    if "text_posts_username_fkey" == error_message && state.is_debug {
+                        HttpResponse::InternalServerError().json("Unable to create post. User doesn't exist")
+                    } else {
+                        HttpResponse::InternalServerError().json("Unable to create post.")
+                    }
+                }
+            }
+        }
     }
 }
 
