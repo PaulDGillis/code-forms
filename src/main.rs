@@ -3,10 +3,10 @@ use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use dotenvy::dotenv;
 
 pub mod user;
-use user::services::user_service_config;
+use user::user_service_config;
 
 pub mod post;
-use post::services::post_service_config;
+use post::post_service_config;
 
 pub struct AppState {
     db: Pool<Postgres>,

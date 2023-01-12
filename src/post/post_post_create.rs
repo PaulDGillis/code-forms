@@ -1,25 +1,14 @@
+use actix_web::{ post, web::{Json, self}, Responder, HttpResponse };
+use serde::Deserialize;
 use std::ops::Deref;
 
-use actix_web::{ get, post, web::{Json, self}, Responder, HttpResponse, delete };
+use crate::{ AppState, post::sql_text_post::TextPost };
 
-use crate::{AppState, post::models::{TextPost, CreateTextPostBody}};
-
-pub fn post_service_config(cfg: &mut web::ServiceConfig) {    
-    cfg
-        .service(list_posts)
-        .service(create)
-        .service(delete);
-}
-
-#[get("/list")]
-pub async fn list_posts(state: web::Data<AppState>) -> impl Responder {
-    match sqlx::query_as!(TextPost, "SELECT id, title, content, username FROM text_posts")
-        .fetch_all(&state.db)
-        .await
-    {
-        Ok(posts) => HttpResponse::Ok().json(posts),
-        Err(_) => HttpResponse::NotFound().json("No posts found."),
-    }
+#[derive(Deserialize)]
+pub struct CreateTextPostBody {
+    pub title: String,
+    pub content: String,
+    pub username: String, // Poster
 }
 
 #[post("/create")]
@@ -47,17 +36,5 @@ pub async fn create(state: web::Data<AppState>, body: Json<CreateTextPostBody>) 
                 }
             }
         }
-    }
-}
-
-#[delete("/{id}")]
-pub async fn delete(id_path: web::Path<i32>, state: web::Data<AppState>) -> impl Responder {
-    let id = id_path.into_inner();
-    match sqlx::query!("DELETE FROM text_posts WHERE id = $1", id)
-        .execute(&state.db)
-        .await
-    {
-        Ok(_) => HttpResponse::Ok().json("TextPost successfully deleted"),
-        Err(_) => HttpResponse::InternalServerError().json("Failed to delete TextPost"),   
     }
 }
