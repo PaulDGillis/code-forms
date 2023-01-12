@@ -5,13 +5,13 @@ use crate::{AppState, user::models::{User, LoginBody, SignupBody}};
 
 pub fn user_service_config(cfg: &mut web::ServiceConfig) {    
     cfg
-        .service(fetch_users)
-        .service(user_signup)
-        .service(user_login);
+        .service(list_users)
+        .service(signup)
+        .service(login);
 }
 
 #[get("/list")]
-pub async fn fetch_users(state: web::Data<AppState>) -> impl Responder {
+pub async fn list_users(state: web::Data<AppState>) -> impl Responder {
     if state.is_debug {
         match sqlx::query_as::<_, User>("SELECT username, password_hash FROM users")
             .fetch_all(&state.db)
@@ -26,7 +26,7 @@ pub async fn fetch_users(state: web::Data<AppState>) -> impl Responder {
 }
 
 #[post("/signup")]
-pub async fn user_signup(data: web::Data<AppState>, body: Json<SignupBody>) -> impl Responder {
+pub async fn signup(state: web::Data<AppState>, body: Json<SignupBody>) -> impl Responder {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
 
@@ -37,7 +37,7 @@ pub async fn user_signup(data: web::Data<AppState>, body: Json<SignupBody>) -> i
     )
         .bind(body.username.to_string())
         .bind(password_hash.to_string())
-        .fetch_one(&data.db)
+        .fetch_one(&state.db)
         .await
     {
         Ok(user) => HttpResponse::Ok().json(user),
@@ -46,12 +46,12 @@ pub async fn user_signup(data: web::Data<AppState>, body: Json<SignupBody>) -> i
 }
 
 #[post("/login")]
-pub async fn user_login(data: web::Data<AppState>, body: Json<LoginBody>) -> impl Responder {
+pub async fn login(state: web::Data<AppState>, body: Json<LoginBody>) -> impl Responder {
     match sqlx::query_as::<_, User>(
         "SELECT username, password_hash FROM users WHERE username = $1"
     )
         .bind(body.username.to_string())
-        .fetch_one(&data.db)
+        .fetch_one(&state.db)
         .await
     {
         Ok(user) => {

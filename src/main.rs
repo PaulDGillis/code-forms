@@ -5,6 +5,9 @@ use dotenv::dotenv;
 pub mod user;
 use user::services::user_service_config;
 
+pub mod post;
+use post::services::post_service_config;
+
 pub struct AppState {
     db: Pool<Postgres>,
     is_debug: bool
@@ -29,6 +32,7 @@ async fn main() -> std::io::Result<()> {
                 is_debug: _is_debug
             }))
             .service(web::scope("/user").configure(user_service_config))
+            .service(web::scope("/post").configure(post_service_config))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
