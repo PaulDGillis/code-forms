@@ -56,7 +56,7 @@ pub async fn login(state: web::Data<AppState>, body: Json<LoginBody>) -> impl Re
     {
         Ok(user) => {
             // User exists
-            let parsed_hash = PasswordHash::new(&user.password_hash).expect("IDK WTF happened");
+            let parsed_hash = PasswordHash::new(&user.password_hash).expect("Couldn't create password_hash from user db.");
             let assertion = Argon2::default().verify_password(body.password.as_bytes(), &parsed_hash);
             match assertion {
                 Ok(_) => HttpResponse::Ok().json(format!("user {} ", user.username)),
