@@ -1,6 +1,6 @@
 use actix_web::{web, App, HttpServer};
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
-use dotenv::dotenv;
+use dotenvy::dotenv;
 
 pub mod user;
 use user::services::user_service_config;

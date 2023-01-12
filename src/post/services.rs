@@ -13,7 +13,7 @@ pub fn post_service_config(cfg: &mut web::ServiceConfig) {
 
 #[get("/list")]
 pub async fn list_posts(state: web::Data<AppState>) -> impl Responder {
-    match sqlx::query_as::<_, TextPost>("SELECT id, title, content, username FROM text_posts")
+    match sqlx::query_as!(TextPost, "SELECT id, title, content, username FROM text_posts")
         .fetch_all(&state.db)
         .await
     {
@@ -24,12 +24,12 @@ pub async fn list_posts(state: web::Data<AppState>) -> impl Responder {
 
 #[post("/create")]
 pub async fn create(state: web::Data<AppState>, body: Json<CreateTextPostBody>) -> impl Responder {
-    match sqlx::query_as::<_, TextPost>(
-        "INSERT INTO text_posts (title, content, username) VALUES ($1, $2, $3) RETURNING id, title, content, username"
+    match sqlx::query_as!(TextPost, 
+        "INSERT INTO text_posts (title, content, username) VALUES ($1, $2, $3) RETURNING id, title, content, username",
+        body.title.to_string(),
+        body.content.to_string(),
+        body.username.to_string()
     )
-        .bind(body.title.to_string())
-        .bind(body.content.to_string())
-        .bind(body.username.to_string())
         .fetch_one(&state.db)
         .await
     {

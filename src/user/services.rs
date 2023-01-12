@@ -13,7 +13,7 @@ pub fn user_service_config(cfg: &mut web::ServiceConfig) {
 #[get("/list")]
 pub async fn list_users(state: web::Data<AppState>) -> impl Responder {
     if state.is_debug {
-        match sqlx::query_as::<_, User>("SELECT username, password_hash FROM users")
+        match sqlx::query_as!(User, "SELECT username, password_hash FROM users")
             .fetch_all(&state.db)
             .await
         {
@@ -32,11 +32,12 @@ pub async fn signup(state: web::Data<AppState>, body: Json<SignupBody>) -> impl 
 
     let password_hash = argon2.hash_password(body.password.as_bytes(), &salt).expect("Oops").to_string();
 
-    match sqlx::query_as::<_, User>(
-        "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING username, password_hash"
+    match sqlx::query_as!(
+        User,
+        "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING username, password_hash",
+        body.username.to_string(),
+        password_hash.to_string()
     )
-        .bind(body.username.to_string())
-        .bind(password_hash.to_string())
         .fetch_one(&state.db)
         .await
     {
@@ -47,10 +48,11 @@ pub async fn signup(state: web::Data<AppState>, body: Json<SignupBody>) -> impl 
 
 #[post("/login")]
 pub async fn login(state: web::Data<AppState>, body: Json<LoginBody>) -> impl Responder {
-    match sqlx::query_as::<_, User>(
-        "SELECT username, password_hash FROM users WHERE username = $1"
+    match sqlx::query_as!(
+        User,
+        "SELECT username, password_hash FROM users WHERE username = $1",
+        body.username.to_string()
     )
-        .bind(body.username.to_string())
         .fetch_one(&state.db)
         .await
     {
