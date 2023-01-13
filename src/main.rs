@@ -1,4 +1,5 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, App, HttpServer };
+use actix_web_httpauth::{middleware::HttpAuthentication };
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use dotenvy::dotenv;
 
@@ -7,6 +8,9 @@ use user::user_service_config;
 
 pub mod post;
 use post::post_service_config;
+
+pub mod auth;
+use auth::auth::jwt_validate;
 
 pub struct AppState {
     db: Pool<Postgres>,
@@ -26,13 +30,15 @@ async fn main() -> std::io::Result<()> {
         .expect("Error connecting to database.");
 
     HttpServer::new(move || {
+        let auth_validator = HttpAuthentication::bearer(jwt_validate);
+
         App::new()
             .app_data(web::Data::new(AppState {
                 db: pool.clone(),
                 is_debug: _is_debug
             }))
             .service(web::scope("/user").configure(user_service_config))
-            .service(web::scope("/post").configure(post_service_config))
+            .service(web::scope("/post").wrap(auth_validator).configure(post_service_config))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

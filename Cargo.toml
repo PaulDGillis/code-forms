@@ -11,4 +11,9 @@ dotenvy = "0.15.6"
 rand_core = { version = "0.6", features = ["std"] }
 serde = "1.0.152"
 sqlx = { version = "0.6", features = [ "runtime-actix-native-tls" , "postgres", "macros", "uuid", "time", "migrate", "offline" ] }
+jsonwebtoken = "8"
 actix-web = "4"
+actix-web-httpauth = "0.8.0"
+futures-util = "0.3.25"
+chrono = "0.4.23"
+derive_more = "0.99.17"

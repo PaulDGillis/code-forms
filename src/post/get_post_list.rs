@@ -1,6 +1,6 @@
 use actix_web::{ get, web, Responder, HttpResponse };
 
-use crate::{AppState, post::sql_text_post::TextPost};
+use crate::{AppState, post::sql_text_post::TextPost };
 
 #[get("/list")]
 pub async fn list_posts(state: web::Data<AppState>) -> impl Responder {

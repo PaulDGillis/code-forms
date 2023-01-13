@@ -2,7 +2,7 @@ use actix_web::{ post, web::{Json, self}, Responder, HttpResponse };
 use argon2::{ password_hash::{ PasswordHash, PasswordVerifier }, Argon2 };
 use serde::Deserialize;
 
-use crate::{AppState, user::sql_user::User};
+use crate::{AppState, user::sql_user::User, auth::auth::Claims};
 
 #[derive(Deserialize)]
 pub struct LoginBody { 
@@ -25,7 +25,7 @@ pub async fn login(state: web::Data<AppState>, body: Json<LoginBody>) -> impl Re
             let parsed_hash = PasswordHash::new(&user.password_hash).expect("Couldn't create password_hash from user db.");
             let assertion = Argon2::default().verify_password(body.password.as_bytes(), &parsed_hash);
             match assertion {
-                Ok(_) => HttpResponse::Ok().json(format!("user {} ", user.username)),
+                Ok(_) => HttpResponse::Ok().json(format!("jwt={}", Claims::new(user.username).encode())),
                 Err(_) => HttpResponse::InternalServerError().json("Failed to validate user.")
             }
         },
