@@ -1,16 +1,14 @@
-use actix_web::{web, App, HttpServer };
-use actix_web_httpauth::{middleware::HttpAuthentication };
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use actix_web::{ web, App, HttpServer };
+use actix_web_httpauth::middleware::HttpAuthentication;
+use sqlx::{ postgres::PgPoolOptions, Pool, Postgres };
 use dotenvy::dotenv;
+use user::user_service_config;
+use post::post_service_config;
+use auth::jwt_validate;
 
 pub mod user;
-use user::user_service_config;
-
 pub mod post;
-use post::post_service_config;
-
 pub mod auth;
-use auth::auth::jwt_validate;
 
 pub struct AppState {
     db: Pool<Postgres>,
